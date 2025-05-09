@@ -1,0 +1,33 @@
+{% extends 'mainapp/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="user-card">
+    <div class="user-avatar">
+        <img src="{{ user.avatar.url }}" alt="avatar-{{ user.username }}" style="max-height: 40px; max-width: 40px;">
+    </div>
+    <div class="user-maindata">
+        <span class="h3">{{ user.first_name }} {{ user.last_name }}</span>
+        <div>
+            {% if user.short_description %}
+                Описание: {{ user.short_description }}
+            {% endif %}
+        </div>
+    </div>
+    <div>
+        <button class="btn btn-primary">Написать</button>
+    </div>
+</div>
+<div class="user-posts">
+    {% for post in posts %}
+        <div class="user-post">
+            <img src="{{ post.image.url }}" alt="user-post-{{ post.pk }}">
+            {{ post.description }}
+        </div>
+        <div>
+            Лайки: {{ post.likes }}
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}
