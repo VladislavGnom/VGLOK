@@ -19,6 +19,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -26,6 +27,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'channels',
     'mainapp',
 ]
 
@@ -57,6 +59,7 @@ TEMPLATES = [
     },
 ]
 
+ASGI_APPLICATION = 'vglok.asgi.application'
 WSGI_APPLICATION = 'vglok.wsgi.application'
 
 
@@ -116,3 +119,13 @@ MEDIA_ROOT = BASE_DIR / 'media'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'mainapp.VGUser'
+
+ASGI_APPLICATION = 'vglok.asgi.application' 
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [('127.0.0.1', 6379)], 
+        },
+    },
+}
