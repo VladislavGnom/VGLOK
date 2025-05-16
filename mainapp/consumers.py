@@ -17,12 +17,19 @@ class PersonalChatConsumer(AsyncWebsocketConsumer):
             return
 
         if not await self.is_valid_chat():
-            print('is_valid_chat')
             await self.close()
             return
         
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
         await self.accept()
+
+        history = await self.get_chat_history()
+        for msg in history:
+            await self.send(text_data=json.dumps({
+                'message': msg.text,
+                'sender_id': msg.sender_id,
+                'timestamp': msg.timestamp.isoformat(),
+            }))
 
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
@@ -67,4 +74,7 @@ class PersonalChatConsumer(AsyncWebsocketConsumer):
             sender=self.user,
             text=text,
         )
-
+    
+    @sync_to_async
+    def get_chat_history(self):
+        return list(Message.objects.filter(chat_id=self.chat_id).order_by('-timestamp')[:50])

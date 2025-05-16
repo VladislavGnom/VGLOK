@@ -18,7 +18,8 @@
 
     chatSocket.onmessage = (e) => {
         const data = JSON.parse(e.data);
-        document.querySelector('#chat-log').innerHTML += data.message + '<br>';
+        const senderId = data.sender_id;
+        document.querySelector('#chat-log').innerHTML += `${senderId}: ${data.message} <br>`;
     };
 
     chatSocket.onclose = function(e) {
@@ -27,8 +28,17 @@
 
     sendMessageButton.onclick = () => {
         const message = sendMessageInput.value;
+
+        if (!message) return
+
         sendMessageInput.value = '';
         chatSocket.send(JSON.stringify({'message': message}));
+    };
+
+    sendMessageInput.onkeyup = (e) => {
+        if (e.key == 'Enter') {
+            sendMessageButton.click();
+        }
     };
 </script>
 {% endblock %}

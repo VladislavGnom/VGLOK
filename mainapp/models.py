@@ -29,13 +29,16 @@ class Chat(models.Model):
     user1 = models.ForeignKey(VGUser, on_delete=models.CASCADE, related_name='chats_initiated')
     user2 = models.ForeignKey(VGUser, on_delete=models.CASCADE, related_name='chats_received')
     created_at = models.DateTimeField(auto_now_add=True)
-
+    last_active = models.DateTimeField(auto_now=True)
 
     class Meta:
         unique_together = ('user1', 'user2')
 
     def __str__(self):
         return f'Чат {self.user1} и {self.user2}'
+    
+    def update_activity(self):
+        self.save()
     
 
 class Message(models.Model):
