@@ -9,10 +9,12 @@
 <button id="chat-message-submit">Отправить</button>
 
 <script>
-    const roomName = 'lobby';  // Имя комнаты
+    const roomId = '{{ chat_id }}';
     const chatSocket = new WebSocket(
-        `ws://${window.location.host}/ws/chat/${roomName}/`
+        `ws://${window.location.host}/ws/chat/${roomId}/`
     );
+    let sendMessageButton = document.querySelector('#chat-message-submit');
+    let sendMessageInput = document.querySelector('#chat-message-input');
 
     chatSocket.onmessage = (e) => {
         const data = JSON.parse(e.data);
@@ -23,8 +25,9 @@
         console.error('Chat socket closed unexpectedly');
     };
 
-    document.querySelector('#chat-message-submit').onclick = () => {
-        const message = document.querySelector('#chat-message-input').value;
+    sendMessageButton.onclick = () => {
+        const message = sendMessageInput.value;
+        sendMessageInput.value = '';
         chatSocket.send(JSON.stringify({'message': message}));
     };
 </script>

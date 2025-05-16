@@ -1,6 +1,8 @@
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth import get_user_model
-from mainapp.models import PostVGUser
+from django.db.models import Q
+
+from mainapp.models import PostVGUser, Chat
 
 User = get_user_model()
 
@@ -27,3 +29,21 @@ def user_personal_page(request, user_id):
     }
 
     return render(request, 'mainapp/user_personal_page.html', context=context)
+
+def personal_chat_room_view(request, chat_id):
+    received_user = get_object_or_404(User, pk=chat_id)
+
+    try:
+        Chat.objects.create(
+            id=chat_id,
+            user1=request.user,
+            user2=received_user,
+        )
+    except:
+        ...    
+
+    context = {
+        'chat_id': chat_id, 
+    }
+
+    return render(request, 'mainapp/chat_room.html', context=context)
