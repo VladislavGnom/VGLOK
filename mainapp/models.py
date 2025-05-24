@@ -26,15 +26,18 @@ class PostVGUser(models.Model):
 
 
 class Chat(models.Model):
+    chat_id = models.CharField(max_length=20, unique=True)
     user1 = models.ForeignKey(VGUser, on_delete=models.CASCADE, related_name='chats_initiated')
     user2 = models.ForeignKey(VGUser, on_delete=models.CASCADE, related_name='chats_received')
     created_at = models.DateTimeField(auto_now_add=True)
     last_active = models.DateTimeField(auto_now=True)
 
     class Meta:
-        unique_together = ('user1', 'user2')
+        unique_together = ('chat_id', 'user1', 'user2')
 
     def __str__(self):
+        if self.user1 == self.user2:
+            return f'Избранное'
         return f'Чат {self.user1} и {self.user2}'
     
     def update_activity(self):

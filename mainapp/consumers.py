@@ -24,7 +24,7 @@ class PersonalChatConsumer(AsyncWebsocketConsumer):
         await self.accept()
 
         history = await self.get_chat_history()
-        for msg in history:
+        for msg in reversed(history):
             await self.send(text_data=json.dumps({
                 'message': msg.text,
                 'sender_id': msg.sender_id,
@@ -62,13 +62,13 @@ class PersonalChatConsumer(AsyncWebsocketConsumer):
         '''Check that the chat is already exist and the user is member into it'''
         return Chat.objects.filter(
             Q(user1=self.user) | Q(user2=self.user),
-            id=self.chat_id,
+            chat_id=self.chat_id,
         ).exists()
 
     @sync_to_async
     def save_message(self, text):
         '''Save the message in DB'''
-        chat = Chat.objects.get(id=self.chat_id)
+        chat = Chat.objects.get(chat_id=self.chat_id)
         return Message.objects.create(
             chat=chat,
             sender=self.user,
@@ -77,4 +77,4 @@ class PersonalChatConsumer(AsyncWebsocketConsumer):
     
     @sync_to_async
     def get_chat_history(self):
-        return list(Message.objects.filter(chat_id=self.chat_id).order_by('-timestamp')[:50])
+        return list(Message.objects.filter(chat__chat_id=self.chat_id).order_by('-timestamp')[:5])
