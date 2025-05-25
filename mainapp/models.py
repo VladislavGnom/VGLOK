@@ -9,7 +9,6 @@ class VGUser(AbstractUser):
 
 class PostVGUser(models.Model):
     description = models.TextField(blank=True, null=True, verbose_name='Описание')
-    likes = models.PositiveIntegerField(default=0, verbose_name='Кол-во лайков')
     image = models.ImageField(upload_to='content', blank=True, null=True, verbose_name='Фото')
     author = models.ForeignKey(VGUser, on_delete=models.CASCADE, related_name='posts', verbose_name='Автор')
 
@@ -76,3 +75,12 @@ class Comment(models.Model):
 
     def __str__(self):
         return f'Комментарий: {self.text[:20]}...'
+    
+
+class Like(models.Model):
+    post = models.ForeignKey(PostVGUser,on_delete=models.CASCADE, related_name='likes', verbose_name='Пост')
+    author = models.ForeignKey(VGUser, on_delete=models.CASCADE, verbose_name='Автор')
+    
+    def __str__(self):
+        return f'Лайк - {self.author.username}'
+    

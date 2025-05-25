@@ -43,7 +43,7 @@
                 <input type="hidden" name="post-pk" value="{{ post.pk }}">
                 <input type="hidden" name="current-location" value="{{ request.scope.path }}">
                 <button type="submit">
-                    {{ post.likes }}    
+                    {{ post.likes.count }}    
                 </button>
             </form>
             <div class="comments-block">

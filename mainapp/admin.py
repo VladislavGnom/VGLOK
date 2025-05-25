@@ -8,5 +8,5 @@ class VGUserAdmin(admin.ModelAdmin):
 
 @admin.register(PostVGUser)
 class PostVGUserAdmin(admin.ModelAdmin):
-    list_display = ('description', 'likes', 'author')
+    list_display = ('description', 'author')
 

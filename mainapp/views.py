@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import HttpResponseBadRequest
 
-from mainapp.models import Chat, PostVGUser
+from mainapp.models import Chat, PostVGUser, Like
 from mainapp.utils import create_chat_between_current_and_new_user, is_chat_room_exist
 from mainapp.forms import PostVGUserForm, CommentForm
 
@@ -132,10 +132,25 @@ def handle_comment(request):
 @login_required
 def add_like_to_post(request):
     if request.method == 'POST':
+        user = request.user
+
         redirected_url = request.POST.get('current-location')
         post_pk = request.POST.get('post-pk')
         target_post = PostVGUser.objects.get(pk=post_pk)
-        target_post.likes += 1
+        is_liked = target_post.likes.filter(author=user).exists()
+
+        if not is_liked:
+            Like.objects.create(
+                post=target_post,
+                author=user,
+            )
+        else:
+            user_like = Like.objects.get(
+                post=target_post,
+                author=user,
+            )
+            user_like.delete()
+
         target_post.save()
 
         return redirect(redirected_url)
