@@ -5,6 +5,7 @@
 {% block content %}
 <div class="h1">Мои чаты:</div>
 <div>
+    {% if my_chats %}
     {% for chat in my_chats %}
         <a href="{% url 'personal_chat_room' chat.chat_id %}">
             <div class="card">
@@ -17,5 +18,8 @@
             </div>
         </a>
     {% endfor %}
+    {% else %}
+    Пока нет активных чатов
+    {% endif %}
 </div>
 {% endblock %}

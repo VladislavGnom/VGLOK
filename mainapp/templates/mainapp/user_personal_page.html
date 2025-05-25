@@ -16,9 +16,11 @@
         </div>
     </div>
     <div>
+        {% if request.user.username != user.username %}
         <a href="{% url 'personal_chat_room' user.pk %}">
             <button class="btn btn-primary">Написать</button>
         </a>
+        {% endif %}
     </div>
 </div>
 <div class="user-posts">

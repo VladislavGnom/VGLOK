@@ -3,10 +3,10 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 
-from mainapp.models import PostVGUser, Chat
-from mainapp.utils import unificate_chat_id
+from mainapp.models import Chat
+from mainapp.utils import create_chat_between_current_and_new_user, is_chat_room_exist
 
-User = get_user_model()
+User = get_user_model() 
 
 @login_required
 def search_users_view(request):
@@ -38,28 +38,35 @@ def user_personal_page(request, user_id):
 def personal_chat_room_view(request, chat_id):
     user = request.user
 
+    if '-' not in chat_id:
+        received_user = get_object_or_404(User, pk=chat_id)
+    else:
+        user_ids = chat_id.split('-')
+        received_user_id = list(filter(lambda pk: int(pk) != user.pk, user_ids))
+
+        if not received_user_id and user_ids.count(str(user.pk)) == 2:
+            received_user_id = user.pk    # избранное
+        else:
+            received_user_id = received_user_id[0]
+
+        received_user = get_object_or_404(User, pk=received_user_id)
+
+    if user.username == received_user.username:
+        title = 'Избранное'
+    else:
+        title = f'Чат {user.username} и {received_user.username}'
+
     # if chat has already exist
-    try:
-        Chat.objects.get(chat_id=chat_id)
-        return render(request, 'mainapp/chat_room.html', context={'chat_id': chat_id})
-    except:  
-        ...
+    if is_chat_room_exist(chat_id=chat_id):
+        return render(request, 'mainapp/chat_room.html', context={'title': title, 'chat_id': chat_id})
 
-    # otherwise chat_id is the pk of the recepient user
-    unificated_chat_id = unificate_chat_id(chat_id_1=chat_id, chat_id_2=user.pk)
-    received_user = get_object_or_404(User, pk=chat_id)
-
-    try:
-        Chat.objects.create(
-            chat_id=unificated_chat_id,
-            user1=request.user,
-            user2=received_user,
-        )
-    except:
-        ...    
+    # otherwise chat_id is the pk of the receiving user
+    chat_id = create_chat_between_current_and_new_user(request=request, received_user=received_user)   
+    if not chat_id: return 
 
     context = {
-        'chat_id': unificated_chat_id, 
+        'title': title,
+        'chat_id': chat_id, 
     }
 
     return render(request, 'mainapp/chat_room.html', context=context)
