@@ -128,3 +128,16 @@ def handle_comment(request):
         return redirect(redirected_url)
 
     return HttpResponseBadRequest()    # GET and other methods are not support for this action
+
+@login_required
+def add_like_to_post(request):
+    if request.method == 'POST':
+        redirected_url = request.POST.get('current-location')
+        post_pk = request.POST.get('post-pk')
+        target_post = PostVGUser.objects.get(pk=post_pk)
+        target_post.likes += 1
+        target_post.save()
+
+        return redirect(redirected_url)
+    
+    return HttpResponseBadRequest()    # GET and other methods are not support for this action

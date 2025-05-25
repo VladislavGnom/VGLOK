@@ -9,4 +9,5 @@ urlpatterns = [
     path('my-chats/', views.my_chats, name='my_chats'),
     path('create-post/', views.create_new_post_view, name='create_post'),
     path('commit-comment/', views.handle_comment, name='handle_comment'),
+    path('add-like-to-post', views.add_like_to_post, name='add_like_to_post'),
 ]
