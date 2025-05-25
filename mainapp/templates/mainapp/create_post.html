@@ -1,0 +1,15 @@
+{% extends 'mainapp/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block head %}
+{% endblock %}
+
+{% block content %}
+<div class="h1">Пост</div>
+<form action="" method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-primary">Опубликовать пост</button>
+</form>
+{% endblock %}

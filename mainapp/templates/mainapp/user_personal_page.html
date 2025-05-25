@@ -20,17 +20,47 @@
         <a href="{% url 'personal_chat_room' user.pk %}">
             <button class="btn btn-primary">Написать</button>
         </a>
+        {% else %}
+        <a href="{% url 'create_post' %}">
+            <button class="btn btn-primary">Создать пост</button>
+        </a>
         {% endif %}
     </div>
 </div>
 <div class="user-posts">
     {% for post in posts %}
-        <div class="user-post">
+        <div class="user-post card">
+            {% if post.image %}
             <img src="{{ post.image.url }}" alt="user-post-{{ post.pk }}">
+            {% else %}
+            {% endif %}
             {{ post.description }}
         </div>
         <div>
-            Лайки: {{ post.likes }}
+            Лайки: 
+            <button type="button">
+                {{ post.likes }}    
+            </button>
+            <div class="comments-block">
+                Комментарии:
+                {% if post.comments %}
+                <ul>
+                    {% for comment in post.comments.all %}
+                        <li>{{ comment.author.username }}: {{ comment.text }}</li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                Пока нет комментариев
+                {% endif %}
+
+                <form action="{% url 'handle_comment' %}" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="post-pk" value="{{ post.pk }}">
+                    <input type="hidden" name="current-location" value="{{ request.scope.path }}">
+                    {{ comment_form }}
+                    <button type="submit">Отправить</button>
+                </form>
+            </div>
         </div>
     {% endfor %}
 </div>

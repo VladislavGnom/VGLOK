@@ -8,7 +8,8 @@
 <body>
     {% block content %}
     {% endblock %}
-    
+
+    <div><a href="{% url 'user_personal_page' request.user.pk %}">Моя страница</a></div>
     <div><a href="{% url 'my_chats' %}">Мои чаты</a></div>
     <div><a href="{% url 'search_users' %}">Поиск</a></div>
 </body>

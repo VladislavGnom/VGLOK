@@ -1,16 +1,19 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect, resolve_url
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
+from django.http import HttpResponseBadRequest
 
-from mainapp.models import Chat
+from mainapp.models import Chat, PostVGUser
 from mainapp.utils import create_chat_between_current_and_new_user, is_chat_room_exist
+from mainapp.forms import PostVGUserForm, CommentForm
 
 User = get_user_model() 
 
 @login_required
 def search_users_view(request):
-    all_loged_users = User.objects.all()
+    user = request.user
+    all_loged_users = User.objects.exclude(username=user.username)
 
     context = {
         'title': 'Поиск пользователей',
@@ -25,11 +28,13 @@ def user_personal_page(request, user_id):
     title_page = 'Моя страница' if request.user.pk == user_id else f'Страница - {target_user.username}'
 
     posts = target_user.posts.all()
+    comment_form = CommentForm()
 
     context = {
         'title': title_page,
         'user': target_user,
-        'posts': posts
+        'posts': posts,
+        'comment_form': comment_form,
     }
 
     return render(request, 'mainapp/user_personal_page.html', context=context)
@@ -37,6 +42,7 @@ def user_personal_page(request, user_id):
 @login_required
 def personal_chat_room_view(request, chat_id):
     user = request.user
+
 
     if '-' not in chat_id:
         received_user = get_object_or_404(User, pk=chat_id)
@@ -81,3 +87,44 @@ def my_chats(request):
     }
 
     return render(request, 'mainapp/my_chats.html', context=context)
+
+@login_required
+def create_new_post_view(request):
+    user = request.user
+
+    if request.method == "POST":
+        form = PostVGUserForm(request.POST, request.FILES)
+        if form.is_valid():
+            user_post = form.save(commit=False)
+            user_post.author = request.user
+            user_post.save()
+
+            redirected_url = resolve_url('user_personal_page', user.pk)
+            return redirect(redirected_url)
+    else:
+        form = PostVGUserForm()
+
+    context = {
+        'title': 'Создание поста',
+        'form': form,
+    }
+
+    return render(request, 'mainapp/create_post.html', context=context)
+
+def handle_comment(request):
+    if request.method == 'POST':
+        form = CommentForm(request.POST)
+        redirected_url = request.POST.get('current-location')
+        if form.is_valid():
+            comment = form.save(commit=False)
+            comment.author = request.user
+
+            post_pk = request.POST.get('post-pk')
+            post = PostVGUser.objects.get(pk=post_pk)
+
+            comment.post = post
+            comment.save()
+
+        return redirect(redirected_url)
+
+    return HttpResponseBadRequest()    # GET and other methods are not support for this action
