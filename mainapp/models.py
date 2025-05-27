@@ -7,13 +7,19 @@ class VGUser(AbstractUser):
     avatar = models.ImageField(upload_to='avatars', blank=True, null=True, default='none_avatar.png', verbose_name='Аватар')
     short_description = models.CharField(max_length=30, blank=True, null=True, verbose_name='Краткое описание')
 
+
 class PostVGUser(models.Model):
     description = models.TextField(blank=True, null=True, verbose_name='Описание')
-    image = models.ImageField(upload_to='content', blank=True, null=True, verbose_name='Фото')
+    image = models.ImageField(upload_to='content', verbose_name='Фото')
     author = models.ForeignKey(VGUser, on_delete=models.CASCADE, related_name='posts', verbose_name='Автор')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def like_count(self):
+        return self.likes.count()
+    
 
     def clean(self):
-        if not self.description and not self.image:
+        if not self.image and not self.description:
             raise ValidationError({
                 'description': 'Необходимо предоставить либо описание, либо фото',
                 'image': 'Необходимо предоставить либо описание, либо фото'
@@ -22,6 +28,14 @@ class PostVGUser(models.Model):
     def save(self, *args, **kwargs):
         self.full_clean()
         super().save(*args, **kwargs)
+
+    @property
+    def is_liked_by_current_user(self):
+        from django.core.exceptions import AppRegistryNotReady
+        try:
+            return self.likes.filter(author=self._request.user).exists()
+        except (AttributeError, AppRegistryNotReady):
+            return False
 
 
 class Chat(models.Model):
@@ -80,7 +94,12 @@ class Comment(models.Model):
 class Like(models.Model):
     post = models.ForeignKey(PostVGUser,on_delete=models.CASCADE, related_name='likes', verbose_name='Пост')
     author = models.ForeignKey(VGUser, on_delete=models.CASCADE, verbose_name='Автор')
-    
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+    class Meta:
+        unique_together = ['post', 'author'] 
+
     def __str__(self):
         return f'Лайк - {self.author.username}'
     

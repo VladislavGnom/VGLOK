@@ -1,7 +1,8 @@
-from django.shortcuts import render, get_object_or_404, redirect, resolve_url
+from django.shortcuts import render, get_object_or_404, redirect, resolve_url, HttpResponse
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
+from django.template.loader import render_to_string
 from django.http import HttpResponseBadRequest
 
 from mainapp.models import Chat, PostVGUser, Like
@@ -27,7 +28,11 @@ def user_personal_page(request, user_id):
     target_user = get_object_or_404(User, pk=user_id)
     title_page = 'Моя страница' if request.user.pk == user_id else f'Страница - {target_user.username}'
 
-    posts = target_user.posts.all()
+    posts = target_user.posts.all().order_by('-created_at')
+    
+    for post in posts:
+        post._request = request
+    
     comment_form = CommentForm()
 
     context = {
@@ -94,6 +99,7 @@ def create_new_post_view(request):
 
     if request.method == "POST":
         form = PostVGUserForm(request.POST, request.FILES)
+
         if form.is_valid():
             user_post = form.save(commit=False)
             user_post.author = request.user
@@ -111,6 +117,7 @@ def create_new_post_view(request):
 
     return render(request, 'mainapp/create_post.html', context=context)
 
+@login_required
 def handle_comment(request):
     if request.method == 'POST':
         form = CommentForm(request.POST)
@@ -156,3 +163,20 @@ def add_like_to_post(request):
         return redirect(redirected_url)
     
     return HttpResponseBadRequest()    # GET and other methods are not support for this action
+
+@login_required
+def toggle_like(request, post_id):
+    post = get_object_or_404(PostVGUser, id=post_id)
+    user = request.user
+    like, created = Like.objects.get_or_create(post=post, author=user)
+    
+    if not created:
+        like.delete()
+        heart_svg = render_to_string('icons/heart-unliked.svg')
+    else:
+        heart_svg = render_to_string('icons/heart-liked.svg')
+
+    return HttpResponse(f"""
+        <span>{post.like_count()}</span>
+        <span class="heart">{heart_svg}</span>
+    """)
