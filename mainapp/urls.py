@@ -8,6 +8,7 @@ urlpatterns = [
     path('chat/<slug:chat_id>', views.personal_chat_room_view, name='personal_chat_room'),
     path('my-chats/', views.my_chats, name='my_chats'),
     path('create-post/', views.create_new_post_view, name='create_post'),
+    path('update-post/', views.update_exist_post_view, name='update_post'),
     path('commit-comment/', views.handle_comment, name='handle_comment'),
     path('toggle_like/<int:post_id>/', views.toggle_like, name='toggle_like'),
 ]

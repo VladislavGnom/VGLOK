@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.template.loader import render_to_string
-from django.http import HttpResponseBadRequest
+from django.http import HttpResponseBadRequest, HttpRequest, HttpResponseRedirect
 
 from mainapp.models import Chat, PostVGUser, Like
 from mainapp.utils import create_chat_between_current_and_new_user, is_chat_room_exist
@@ -12,7 +12,7 @@ from mainapp.forms import PostVGUserForm, CommentForm
 User = get_user_model() 
 
 @login_required
-def search_users_view(request):
+def search_users_view(request: HttpRequest) -> HttpResponse:
     user = request.user
     all_loged_users = User.objects.exclude(username=user.username)
 
@@ -24,7 +24,7 @@ def search_users_view(request):
     return render(request, 'mainapp/search_users_page.html', context=context)
 
 @login_required
-def user_personal_page(request, user_id):
+def user_personal_page(request: HttpRequest, user_id: int) -> HttpResponse:
     target_user = get_object_or_404(User, pk=user_id)
     title_page = 'Моя страница' if request.user.pk == user_id else f'Страница - {target_user.username}'
 
@@ -45,7 +45,7 @@ def user_personal_page(request, user_id):
     return render(request, 'mainapp/user_personal_page.html', context=context)
 
 @login_required
-def personal_chat_room_view(request, chat_id):
+def personal_chat_room_view(request: HttpRequest, chat_id: str) -> HttpResponse:
     user = request.user
 
 
@@ -83,7 +83,7 @@ def personal_chat_room_view(request, chat_id):
     return render(request, 'mainapp/chat_room.html', context=context)
 
 @login_required
-def my_chats(request):
+def my_chats(request: HttpRequest) -> HttpResponse:
     user = request.user 
 
     context = {
@@ -94,7 +94,7 @@ def my_chats(request):
     return render(request, 'mainapp/my_chats.html', context=context)
 
 @login_required
-def create_new_post_view(request):
+def create_new_post_view(request: HttpRequest) -> HttpResponse | HttpResponseRedirect:
     user = request.user
 
     if request.method == "POST":
@@ -117,11 +117,14 @@ def create_new_post_view(request):
 
     return render(request, 'mainapp/create_post.html', context=context)
 
+def update_exist_post_view(requset: HttpRequest):
+    ...
+
 @login_required
-def handle_comment(request):
+def handle_comment(request: HttpRequest) -> HttpResponse | HttpResponseBadRequest:
     if request.method == 'POST':
         form = CommentForm(request.POST)
-        redirected_url = request.POST.get('current-location')
+        
         if form.is_valid():
             comment = form.save(commit=False)
             comment.author = request.user
@@ -132,51 +135,28 @@ def handle_comment(request):
             comment.post = post
             comment.save()
 
-        return redirect(redirected_url)
+        return HttpResponse(f"""
+            <li>{ comment.author.username }: { comment.text }</li>
+        """)
 
     return HttpResponseBadRequest()    # GET and other methods are not support for this action
 
 @login_required
-def add_like_to_post(request):
+def toggle_like(request: HttpRequest, post_id: int) -> HttpResponse | HttpResponseBadRequest:
     if request.method == 'POST':
+        post = get_object_or_404(PostVGUser, id=post_id)
         user = request.user
-
-        redirected_url = request.POST.get('current-location')
-        post_pk = request.POST.get('post-pk')
-        target_post = PostVGUser.objects.get(pk=post_pk)
-        is_liked = target_post.likes.filter(author=user).exists()
-
-        if not is_liked:
-            Like.objects.create(
-                post=target_post,
-                author=user,
-            )
+        like, created = Like.objects.get_or_create(post=post, author=user)
+        
+        if not created:
+            like.delete()
+            heart_svg = render_to_string('icons/heart-unliked.svg')
         else:
-            user_like = Like.objects.get(
-                post=target_post,
-                author=user,
-            )
-            user_like.delete()
+            heart_svg = render_to_string('icons/heart-liked.svg')
 
-        target_post.save()
-
-        return redirect(redirected_url)
+        return HttpResponse(f"""
+            <span>{post.like_count()}</span>
+            <span class="heart">{heart_svg}</span>
+        """)
     
     return HttpResponseBadRequest()    # GET and other methods are not support for this action
-
-@login_required
-def toggle_like(request, post_id):
-    post = get_object_or_404(PostVGUser, id=post_id)
-    user = request.user
-    like, created = Like.objects.get_or_create(post=post, author=user)
-    
-    if not created:
-        like.delete()
-        heart_svg = render_to_string('icons/heart-unliked.svg')
-    else:
-        heart_svg = render_to_string('icons/heart-liked.svg')
-
-    return HttpResponse(f"""
-        <span>{post.like_count()}</span>
-        <span class="heart">{heart_svg}</span>
-    """)

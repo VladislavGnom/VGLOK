@@ -66,20 +66,21 @@
             </div>
             <div class="comments-block">
                 Комментарии:
-                {% if post.comments %}
-                <ul>
-                    {% for comment in post.comments.all %}
-                        <li>{{ comment.author.username }}: {{ comment.text }}</li>
-                    {% endfor %}
-                </ul>
-                {% else %}
-                Пока нет комментариев
-                {% endif %}
+                <div class="comment-section">
+                    <ul id="comment-section-post-{{ post.pk }}">
+                    {% if post.comments %}
+                        {% for comment in post.comments.all %}
+                            <li>{{ comment.author.username }}: {{ comment.text }}</li>
+                        {% endfor %}
+                    {% else %}
+                        Пока нет комментариев
+                    {% endif %}
+                    </ul>
+                </div>
 
-                <form action="{% url 'handle_comment' %}" method="post">
+                <form class="comment-form" hx-post="{% url 'handle_comment' %}" hx-reset="true" hx-target="#comment-section-post-{{ post.pk }}" hx-swap="afterbegin">
                     {% csrf_token %}
                     <input type="hidden" name="post-pk" value="{{ post.pk }}">
-                    <input type="hidden" name="current-location" value="{{ request.scope.path }}">
                     {{ comment_form }}
                     <button type="submit">Отправить</button>
                 </form>

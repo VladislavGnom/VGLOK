@@ -76,6 +76,7 @@ class Comment(models.Model):
     post = models.ForeignKey(PostVGUser,on_delete=models.CASCADE, related_name='comments', verbose_name='Пост')
     author = models.ForeignKey(VGUser, on_delete=models.CASCADE, verbose_name='Автор')
     text = models.TextField(verbose_name='Содержимое комментария')
+    timestamp = models.DateTimeField(auto_now_add=True)        
 
     def clean(self):
         if not self.text:
@@ -86,6 +87,9 @@ class Comment(models.Model):
     def save(self, *args, **kwargs):
         self.full_clean()
         super().save(*args, **kwargs)
+
+    class Meta:
+        ordering = ['-timestamp']
 
     def __str__(self):
         return f'Комментарий: {self.text[:20]}...'
