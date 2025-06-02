@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.template.loader import render_to_string
-from django.http import HttpResponseBadRequest, HttpRequest, HttpResponseRedirect
+from django.http import HttpResponseBadRequest, HttpRequest, HttpResponseRedirect, Http404, JsonResponse
 
 from mainapp.models import Chat, PostVGUser, Like
 from mainapp.utils import create_chat_between_current_and_new_user, is_chat_room_exist
@@ -117,8 +117,46 @@ def create_new_post_view(request: HttpRequest) -> HttpResponse | HttpResponseRed
 
     return render(request, 'mainapp/create_post.html', context=context)
 
-def update_exist_post_view(requset: HttpRequest):
-    ...
+@login_required
+def update_exist_post_view(request: HttpRequest, post_id: int) -> HttpResponse | Http404 | HttpResponseRedirect:
+    user = request.user
+    exist_user_post = get_object_or_404(PostVGUser, author=user, pk=post_id)
+
+    if request.method == "POST":
+        form = PostVGUserForm(request.POST, request.FILES, instance=exist_user_post)
+
+        if form.is_valid():
+            user_post = form.save(commit=False)
+            user_post.author = request.user
+            user_post.save()
+
+            redirected_url = resolve_url('user_personal_page', user.pk)
+            return redirect(redirected_url)
+    else:
+        form = PostVGUserForm(instance=exist_user_post)
+
+    context = {
+        'title': 'Обновление поста',
+        'form': form,
+    }
+
+    return render(request, 'mainapp/update_post.html', context=context)
+
+@login_required
+def delete_exist_post_view(request: HttpRequest, post_id: int) -> HttpResponse | Http404 | HttpResponseRedirect:
+    user = request.user
+    exist_user_post = get_object_or_404(PostVGUser, author=user, pk=post_id)
+
+    if request.method == "POST":
+        exist_user_post.delete()
+
+        return JsonResponse(data={
+            'status': 200,
+        })
+
+    return JsonResponse(data={
+        'status': 400,
+    })
 
 @login_required
 def handle_comment(request: HttpRequest) -> HttpResponse | HttpResponseBadRequest:
