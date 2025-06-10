@@ -1,43 +1,3 @@
-{% extends 'mainapp/base.html' %}
-
-{% load static %}
-
-{% block title %}{{ title }}{% endblock %}
-
-{% block head %}
-<script src="https://unpkg.com/htmx.org@2.0.4/dist/htmx.js" integrity="sha384-oeUn82QNXPuVkGCkcrInrS1twIxKhkZiFfr2TdiuObZ3n3yIeMiqcRzkIcguaof1" crossorigin="anonymous"></script>
-<style>
-    .like-btn { cursor: pointer; }
-    .heart { transition: all 0.3s; }
-</style>
-<meta name="csrf-token" content="{{ csrf_token }}">
-{% endblock %}
-
-{% block content %}
-<div class="user-card">
-    <div class="user-avatar">
-        <img src="{{ user.avatar.url }}" alt="avatar-{{ user.username }}" style="max-height: 40px; max-width: 40px;">
-    </div>
-    <div class="user-maindata">
-        <span class="h3">{{ user.first_name }} {{ user.last_name }}</span>
-        <div>
-            {% if user.short_description %}
-                Описание: {{ user.short_description }}
-            {% endif %}
-        </div>
-    </div>
-    <div>
-        {% if request.user.username != user.username %}
-        <a href="{% url 'personal_chat_room' user.pk %}">
-            <button class="btn btn-primary">Написать</button>
-        </a>
-        {% else %}
-        <a href="{% url 'create_post' %}">
-            <button class="btn btn-primary">Создать пост</button>
-        </a>
-        {% endif %}
-    </div>
-</div>
 <div id="posts-feed">
     {% for post in posts %}
         <div class="user-post card">
@@ -96,10 +56,3 @@
         </div>
     {% endfor %}
 </div>
-
-<script>
-document.body.addEventListener('htmx:configRequest', (event) => {
-    event.detail.headers['X-CSRFToken'] = '{{ csrf_token }}';
-});
-</script>
-{% endblock %}

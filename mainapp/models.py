@@ -10,7 +10,7 @@ class VGUser(AbstractUser):
 
 class PostVGUser(models.Model):
     description = models.TextField(blank=True, null=True, verbose_name='Описание')
-    image = models.ImageField(upload_to='content', verbose_name='Фото')
+    image = models.ImageField(upload_to='content', verbose_name='Фото', blank=True)
     author = models.ForeignKey(VGUser, on_delete=models.CASCADE, related_name='posts', verbose_name='Автор')
     created_at = models.DateTimeField(auto_now_add=True)
 

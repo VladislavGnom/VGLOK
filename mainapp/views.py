@@ -8,6 +8,7 @@ from django.http import HttpResponseBadRequest, HttpRequest, HttpResponseRedirec
 from mainapp.models import Chat, PostVGUser, Like
 from mainapp.utils import create_chat_between_current_and_new_user, is_chat_room_exist
 from mainapp.forms import PostVGUserForm, CommentForm
+from mainapp.exceptions.base_exeptions import CantRemoveUserPost
 
 User = get_user_model() 
 
@@ -148,11 +149,27 @@ def delete_exist_post_view(request: HttpRequest, post_id: int) -> HttpResponse |
     exist_user_post = get_object_or_404(PostVGUser, author=user, pk=post_id)
 
     if request.method == "POST":
-        exist_user_post.delete()
+        target_user = exist_user_post.author
 
-        return JsonResponse(data={
-            'status': 200,
-        })
+        if exist_user_post.author == request.user:
+            exist_user_post.delete()
+        else:
+            raise CantRemoveUserPost()
+        
+        posts = target_user.posts.all().order_by('-created_at')
+    
+        for post in posts:
+            post._request = request
+
+        comment_form = CommentForm()
+
+        context = {
+            'user': target_user,
+            'posts': posts,
+            'comment_form': comment_form,
+        }
+
+        return render(request, 'mainapp/particials/posts_feed.html', context=context)
 
     return JsonResponse(data={
         'status': 400,
