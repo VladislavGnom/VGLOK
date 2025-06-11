@@ -215,3 +215,22 @@ def toggle_like(request: HttpRequest, post_id: int) -> HttpResponse | HttpRespon
         """)
     
     return HttpResponseBadRequest()    # GET and other methods are not support for this action
+
+@login_required
+def search_users_feed_view(request: HttpRequest) -> HttpResponse | Http404 | HttpResponseRedirect:
+    user = request.user
+
+    search_text = request.GET.get('search_text')
+
+    if not search_text: return HttpResponseBadRequest()
+
+    founded_users = User.objects.filter(
+        Q(username__startswith=search_text) | Q(short_description__contains=search_text) | Q(first_name__contains=search_text) | Q(last_name__contains=search_text)
+    ).exclude(pk=user.pk)
+
+
+    context = {
+        'users': founded_users,
+    }
+
+    return render(request, 'mainapp/particials/search_users_feed.html', context=context)

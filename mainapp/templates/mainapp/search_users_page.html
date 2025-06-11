@@ -2,8 +2,20 @@
 
 {% block title %}{{ title }}{% endblock %}
 
+{% block head %}
+<script src="https://unpkg.com/htmx.org@2.0.4/dist/htmx.js" integrity="sha384-oeUn82QNXPuVkGCkcrInrS1twIxKhkZiFfr2TdiuObZ3n3yIeMiqcRzkIcguaof1" crossorigin="anonymous"></script>
+{% endblock %}
+
 {% block content %}
-<div>
+<form 
+    hx-get="{% url 'search_users_feed' %}" 
+    hx-target="#search-users-feed" 
+    hx-swap="outerHTML" 
+    hx-trigger="keyup changed delay:500ms">
+    <input type="text" name="search_text" placeholder="Введите имя пользователя...">
+    <button type="submit">Найти</button>
+</form>
+<div id="search-users-feed">
     {% for user in all_loged_users %}
         <div class="user-card">
             <a href="{% url 'user_personal_page' user.pk %}">

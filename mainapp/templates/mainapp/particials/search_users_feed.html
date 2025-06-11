@@ -1,0 +1,18 @@
+<div id="search-users-feed">
+    {% if users %}
+    {% for user in users %}
+        <div class="user-card">
+            <a href="{% url 'user_personal_page' user.pk %}">
+                <div class="user-avatar">
+                    <img src="{{ user.avatar.url }}" alt="avatar-{{ user.username }}" style="max-height: 40px; max-width: 40px;">
+                </div>
+                <div class="user-maindata">
+                    {{ user.first_name }} {{ user.last_name }}
+                </div>
+            </a>
+        </div>
+    {% endfor %}
+    {% else %}
+        <div>Ничего не найдено</div>
+    {% endif %}
+</div>
