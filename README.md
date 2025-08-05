@@ -1,5 +1,3 @@
-# README for VGLOK Social Network
-
 # VGLOK Social Network
 
 VGLOK is a modern social networking platform currently in development. It offers core social media functionalities with a clean, responsive interface and real-time features.
